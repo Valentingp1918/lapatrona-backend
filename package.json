@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node servidor.js"
+    "start": "node server.js"
   },
   "dependencies": {
-    "@supabase/supabase-client": "^2.43.4",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "@supabase/supabase-client": "^2.43.4"
   }
 }
