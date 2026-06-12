@@ -26,7 +26,7 @@ app.post('/api/usuarios', async (req, res) => {
                 nombre_completo: nombre_completo, 
                 telefono: telefono, 
                 parroquia: parroquia, 
-                password: password, 
+                password_hash: password,
                 rol: rol 
             }]);
 
