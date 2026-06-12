@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 // CONFIGURACIÓN - REEMPLAZA CON TUS DATOS DE SUPABASE
-const supabase = createClient('https://xyz.supabase.co', 'sb_publishable__VnYSSwPbXC5obSOXZc8uA_YuDu1XyI);
+const supabase = createClient('https://lapatrona-backend.onrender.com', 'sb_publishable__VnYSSwPbXC5obSOXZc8uA_YuDu1XyI);
 const SECRET_KEY = 'TuClaveSecretaSuperSegura'; 
 
 // --- MIDDLEWARE DE SEGURIDAD ---
