@@ -1,15 +1,16 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(express.json());
 
-// Configuración de Supabase
-const supabase = createClient('https://xyz.supabase.co', 'eyJhbGciOiJIUzI1NiIsIn...');
+// CONFIGURACIÓN - REEMPLAZA CON TUS DATOS DE SUPABASE
+const supabase = createClient('https://xyz.supabase.co', 'sb_publishable__VnYSSwPbXC5obSOXZc8uA_YuDu1XyI);
 const SECRET_KEY = 'TuClaveSecretaSuperSegura'; 
 
-// --- MIDDLEWARE DE SEGURIDAD (El Vigilante) ---
+// --- MIDDLEWARE DE SEGURIDAD ---
 const verificarToken = (req, res, next) => {
     const token = req.headers['authorization'];
     if (!token) return res.status(403).json({ mensaje: "Token requerido" });
@@ -29,12 +30,12 @@ app.post('/api/login', async (req, res) => {
         .from('usuarios')
         .select('*')
         .eq('cedula', cedula)
-        .eq('password_hash', password)
         .single();
-// Añade esto temporalmente para ver qué recibe el servidor
-console.log("Datos recibidos:", cedula, password);
-console.log("Usuario encontrado:", usuario);
-    if (error || !usuario) return res.status(401).json({ mensaje: "Credenciales incorrectas" });
+
+    if (error || !usuario) return res.status(401).json({ mensaje: "Usuario no encontrado" });
+
+    const coincide = await bcrypt.compare(password, usuario.password_hash);
+    if (!coincide) return res.status(401).json({ mensaje: "Contraseña incorrecta" });
 
     const token = jwt.sign({ id: usuario.id_usuario }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ mensaje: "Login exitoso", token });
@@ -65,6 +66,5 @@ app.get('/api/traspasos/:id_bici', async (req, res) => {
     res.json(data);
 });
 
-// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
