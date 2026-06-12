@@ -13,10 +13,14 @@ const SECRET_KEY = 'TuClaveSecretaSuperSegura';
 // --- MIDDLEWARE DE SEGURIDAD ---
 const verificarToken = (req, res, next) => {
     const token = req.headers['authorization'];
+    console.log("Token recibido:", token); // <-- AGREGA ESTO
     if (!token) return res.status(403).json({ mensaje: "Token requerido" });
 
-    jwt.verify(token, SECRET_KEY, (err, decoded) => {
-        if (err) return res.status(401).json({ mensaje: "Token inválido" });
+    jwt.verify(token, 'TuClaveSecretaSuperSegura', (err, decoded) => {
+        if (err) {
+            console.log("Error de verificación:", err.message); // <-- AGREGA ESTO
+            return res.status(401).json({ mensaje: "Token inválido" });
+        }
         req.usuarioId = decoded.id;
         next();
     });
