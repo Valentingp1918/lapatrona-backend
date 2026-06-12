@@ -50,6 +50,15 @@ app.post('/api/usuarios', async (req, res) => {
     }
 });
 
+app.get('/api/usuarios', async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('usuarios').select('*');
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // --- RUTA: REALIZAR TRASPASO (POST) ---
 app.post('/api/traspasos', async (req, res) => {
     try {
