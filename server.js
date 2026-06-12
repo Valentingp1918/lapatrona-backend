@@ -37,7 +37,7 @@ app.post('/api/bicicletas', async (req, res) => {
     }
 });
 
-// --- RUTA DE TRASPASOS (Actualiza dueño y registra movimiento) ---
+// --- RUTA DE TRASPASOS ---
 app.post('/api/traspasos', async (req, res) => {
     try {
         const { id_bici, id_vendedor, id_comprador } = req.body;
