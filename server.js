@@ -1,105 +1,68 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-const jwt = require('jsonwebtoken'); // <--- AÑADE ESTA LÍNEA
+const jwt = require('jsonwebtoken');
+
 const app = express();
 app.use(express.json());
 
 // Configuración de Supabase
-const supabaseUrl = 'https://bqnekvkahkyvsanarfdb.supabase.co';
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient('TU_SUPABASE_URL', 'TU_SUPABASE_KEY');
+const SECRET_KEY = 'TuClaveSecretaSuperSegura'; 
 
-// --- RUTA: LISTAR BICICLETAS (GET) ---
-app.get('/api/bicicletas', async (req, res) => {
-    try {
-        const { data, error } = await supabase.from('bicicletas').select('*');
-        if (error) throw error;
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+// --- MIDDLEWARE DE SEGURIDAD (El Vigilante) ---
+const verificarToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(403).json({ mensaje: "Token requerido" });
+
+    jwt.verify(token, SECRET_KEY, (err, decoded) => {
+        if (err) return res.status(401).json({ mensaje: "Token inválido" });
+        req.usuarioId = decoded.id;
+        next();
+    });
+};
+
+// --- RUTA: LOGIN ---
+app.post('/api/login', async (req, res) => {
+    const { cedula, password } = req.body;
+    
+    const { data: usuario, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('cedula', cedula)
+        .eq('password_hash', password)
+        .single();
+
+    if (error || !usuario) return res.status(401).json({ mensaje: "Credenciales incorrectas" });
+
+    const token = jwt.sign({ id: usuario.id_usuario }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ mensaje: "Login exitoso", token });
 });
 
-// --- RUTA: REGISTRAR BICICLETA (POST) ---
-app.post('/api/bicicletas', async (req, res) => {
-    try {
-        const { id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, token_qr } = req.body;
-        const { data, error } = await supabase
-            .from('bicicletas')
-            .insert([{ id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, token_qr }])
-            .select();
-        
-        if (error) throw error;
-        res.json({ mensaje: "Bicicleta registrada con éxito", data });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+// --- RUTA: TRASPASO (Protegida) ---
+app.post('/api/traspasos', verificarToken, async (req, res) => {
+    const { id_bici, id_comprador } = req.body;
+    const id_vendedor = req.usuarioId; 
+
+    const { data, error } = await supabase
+        .from('traspasos')
+        .insert([{ id_bici, id_vendedor, id_comprador }]);
+
+    if (error) return res.status(400).json({ error: error.message });
+    res.json({ mensaje: "Traspaso de La Patrona completado con éxito" });
 });
 
-// --- RUTA: REGISTRAR USUARIO (POST) ---
-app.post('/api/usuarios', async (req, res) => {
-    try {
-        const { cedula, nombre_completo, telefono, parroquia, password_hash, rol } = req.body;
-        const { data, error } = await supabase.from('usuarios').insert([{ 
-            cedula, nombre_completo, telefono, parroquia, password_hash, rol 
-        }]).select();
-        if (error) throw error;
-        res.json({ mensaje: "Usuario registrado con éxito", data });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/usuarios', async (req, res) => {
-    try {
-        const { data, error } = await supabase.from('usuarios').select('*');
-        if (error) throw error;
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-// --- RUTA: REALIZAR TRASPASO (POST) ---
-app.post('/api/traspasos', async (req, res) => {
-    try {
-        const { id_bici, id_vendedor, id_comprador } = req.body;
-        const { error: errorTraspaso } = await supabase.from('traspasos').insert([{ 
-            id_bici, id_vendedor, id_comprador, estatus_traspaso: 'Completado' 
-        }]);
-        if (errorTraspaso) throw errorTraspaso;
-
-        const { error: errorUpdate } = await supabase
-            .from('bicicletas')
-            .update({ id_propietario: id_comprador })
-            .eq('id_bici', id_bici);
-        if (errorUpdate) throw errorUpdate;
-
-        res.json({ mensaje: "Traspaso de La Patrona completado con éxito" });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-// --- RUTA: HISTORIAL DE UNA BICICLETA ---
+// --- RUTA: HISTORIAL ---
 app.get('/api/traspasos/:id_bici', async (req, res) => {
-    try {
-        const { id_bici } = req.params;
-        const { data, error } = await supabase
-            .from('traspasos')
-            .select(`
-                id_traspaso,
-                fecha_traspaso,
-                vendedor:usuarios!traspasos_id_vendedor_fkey(nombre_completo),
-                comprador:usuarios!traspasos_id_comprador_fkey(nombre_completo)
-            `)
-            .eq('id_bici', id_bici);
+    const { id_bici } = req.params;
+    const { data, error } = await supabase
+        .from('traspasos')
+        .select(`id_traspaso, fecha_traspaso, vendedor:usuarios!traspasos_id_vendedor_fkey(nombre_completo), comprador:usuarios!traspasos_id_comprador_fkey(nombre_completo)`)
+        .eq('id_bici', id_bici);
+    
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+});
 
-        if (error) throw error;
-        res.json(data);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+// --- INICIO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor activo en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
