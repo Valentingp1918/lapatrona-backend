@@ -79,7 +79,26 @@ app.post('/api/traspasos', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+// --- RUTA: HISTORIAL DE UNA BICICLETA ---
+app.get('/api/traspasos/:id_bici', async (req, res) => {
+    try {
+        const { id_bici } = req.params;
+        const { data, error } = await supabase
+            .from('traspasos')
+            .select(`
+                id_traspaso,
+                fecha_traspaso,
+                vendedor:usuarios!traspasos_id_vendedor_fkey(nombre_completo),
+                comprador:usuarios!traspasos_id_comprador_fkey(nombre_completo)
+            `)
+            .eq('id_bici', id_bici);
 
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Servidor activo en puerto ${PORT}`);
