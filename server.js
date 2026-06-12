@@ -31,7 +31,9 @@ app.post('/api/login', async (req, res) => {
         .eq('cedula', cedula)
         .eq('password_hash', password)
         .single();
-
+// Añade esto temporalmente para ver qué recibe el servidor
+console.log("Datos recibidos:", cedula, password);
+console.log("Usuario encontrado:", usuario);
     if (error || !usuario) return res.status(401).json({ mensaje: "Credenciales incorrectas" });
 
     const token = jwt.sign({ id: usuario.id_usuario }, SECRET_KEY, { expiresIn: '1h' });
