@@ -26,7 +26,7 @@ app.post('/api/usuarios', async (req, res) => {
 // --- RUTA DE BICICLETAS ---
 app.post('/api/bicicletas', async (req, res) => {
     try {
-        const { id_propietario, serial_cuadro, Marca, Modelo, tipo, color_principal, Estatus, Token_qr } = req.body;
+        const { id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, Token_qr } = req.body;
         const { data, error } = await supabase.from('bicicletas').insert([{ 
             id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, Token_qr 
         }]);
