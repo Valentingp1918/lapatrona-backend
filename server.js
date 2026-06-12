@@ -27,9 +27,10 @@ app.post('/api/usuarios', async (req, res) => {
 app.post('/api/bicicletas', async (req, res) => {
     try {
         const { id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, token_qr } = req.body;
-        const { data, error } = await supabase.from('bicicletas').insert([{ 
-            id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, token_qr 
-        }]);
+        const { data, error } = await supabase
+    .from('bicicletas')
+    .insert([{ id_propietario, serial_cuadro, marca, modelo, tipo, color_principal, estatus, token_qr }])
+    .select(); // <--- Esto hace que Supabase te devuelva la fila creada
         if (error) throw error;
         res.json({ mensaje: "Bicicleta registrada con éxito", data });
     } catch (error) {
