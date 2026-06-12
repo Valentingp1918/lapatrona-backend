@@ -6,7 +6,7 @@ const app = express();
 app.use(express.json());
 
 // Configuración de Supabase
-const supabase = createClient('TU_SUPABASE_URL', 'TU_SUPABASE_KEY');
+const supabase = createClient('https://xyz.supabase.co', 'eyJhbGciOiJIUzI1NiIsIn...');
 const SECRET_KEY = 'TuClaveSecretaSuperSegura'; 
 
 // --- MIDDLEWARE DE SEGURIDAD (El Vigilante) ---
