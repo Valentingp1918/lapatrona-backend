@@ -27,7 +27,7 @@ app.post('/api/usuarios', async (req, res) => {
 app.post('/api/bicicletas', async (req, res) => {
     try {
         const { id_propietario, serial_cuadro, Marca, Modelo, tipo, color_principal, Estatus, Token_qr } = req.body;
-        const { data, error } = await supabase.from('Bicicletas').insert([{ 
+        const { data, error } = await supabase.from('bicicletas').insert([{ 
             id_propietario, serial_cuadro, Marca, Modelo, tipo, color_principal, Estatus, Token_qr 
         }]);
         if (error) throw error;
@@ -43,7 +43,7 @@ app.post('/api/traspasos', async (req, res) => {
         const { id_bici, id_vendedor, id_comprador } = req.body;
 
         // 1. Registrar el movimiento en la tabla Traspasos
-        const { error: errorTraspaso } = await supabase.from('Traspasos').insert([{ 
+        const { error: errorTraspaso } = await supabase.from('traspasos').insert([{ 
             id_bici, id_vendedor, id_comprador, estatus_traspaso: 'Completado' 
         }]);
         if (errorTraspaso) throw errorTraspaso;
