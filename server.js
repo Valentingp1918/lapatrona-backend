@@ -1,6 +1,6 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
-
+const jwt = require('jsonwebtoken'); // <--- AÑADE ESTA LÍNEA
 const app = express();
 app.use(express.json());
 
