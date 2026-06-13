@@ -29,7 +29,7 @@ app.post('/api/login', async (req, res) => {
     }
 
     // 2. Comparar contraseña (bcrypt)
-    const coincide = await bcrypt.compare(password, usuario.password_hash);
+    const coincide = (password === usuario.password_hash);
     
     if (!coincide) {
         return res.status(401).json({ mensaje: "Password incorrecto" });
