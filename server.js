@@ -6,44 +6,37 @@ const bcrypt = require('bcrypt');
 const app = express();
 app.use(express.json());
 
-// Configuración de Supabase
+// CONFIGURACIÓN DE SUPABASE
 const supabase = createClient(
     'https://bqnekvkahkyvsanarfdb.supabase.co', 
     'sb_publishable__VnYSSwPbXC5obSOXZc8uA_YuDu1XyI'
 );
 const SECRET_KEY = 'TuClaveSecretaSuperSegura'; 
 
-// --- RUTA: LOGIN CON LOGS DE DEPURACIÓN ---
+// --- RUTA: LOGIN ---
 app.post('/api/login', async (req, res) => {
     const { cedula, password } = req.body;
     
-    console.log("Intento de login para cedula:", cedula);
-
+    // 1. Buscar usuario
     const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('*')
         .eq('cedula', cedula)
         .single();
 
-    if (error) {
-        console.error("Error en Supabase:", error);
-        return res.status(401).json({ mensaje: "Error de conexión con la BD" });
-    }
-    
-    if (!usuario) {
-        console.warn("Usuario no encontrado:", cedula);
-        return res.status(401).json({ mensaje: "Cédula no registrada" });
+    if (error || !usuario) {
+        return res.status(401).json({ mensaje: "Usuario no encontrado" });
     }
 
-    // Verificación de password
+    // 2. Comparar contraseña (bcrypt)
     const coincide = await bcrypt.compare(password, usuario.password_hash);
+    
     if (!coincide) {
-        console.warn("Password incorrecto para:", cedula);
         return res.status(401).json({ mensaje: "Password incorrecto" });
     }
 
+    // 3. Generar token
     const token = jwt.sign({ id: usuario.id_usuario }, SECRET_KEY, { expiresIn: '1h' });
-    console.log("Login exitoso para:", cedula);
     res.json({ mensaje: "Login exitoso", token });
 });
 
@@ -69,5 +62,6 @@ app.post('/api/traspasos', verificarToken, async (req, res) => {
     res.json({ mensaje: "Traspaso registrado" });
 });
 
+// PUERTO
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
